@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#e8dfcf" />
+    <title>Melon Drop</title>
+    <style>
+      :root { color-scheme: light; }
+      html, body {
+        margin: 0; padding: 0; height: 100%; overflow: hidden;
+        background: #1b1712;
+        font-family: ui-serif, Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+        -webkit-font-smoothing: antialiased;
+        touch-action: none; overscroll-behavior: none;
+      }
+      #stage { position: fixed; inset: 0; display: block; width: 100%; height: 100%; cursor: crosshair; }
+      #rotate {
+        position: fixed; inset: 0; display: none; place-items: center; text-align: center;
+        background: #1b1712; color: #e8dfcf; font-size: 18px; padding: 8vw; line-height: 1.6; z-index: 10;
+      }
+      @media (max-aspect-ratio: 3/4) and (pointer: coarse) {
+        #rotate { display: grid; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="stage"></canvas>
+    <div id="rotate">Turn your device sideways.<br />The hill is taller than it is wide.</div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
