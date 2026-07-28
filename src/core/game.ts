@@ -595,5 +595,12 @@ export class Game {
 
   resize(w: number, h: number): void {
     this.cam.resize(w, h)
+    // The constructor has to frame the shot before the canvas knows how big it
+    // is, so the very first frame would otherwise open at the minimum zoom and
+    // visibly crawl inward. Re-frame and snap while nothing is in flight.
+    if (this.phase === 'title' || this.phase === 'aim') {
+      this.updateCamera(0)
+      this.cam.snap()
+    }
   }
 }
