@@ -115,44 +115,59 @@ export class Training {
     this.active = false
   }
 
+  /**
+   * Card geometry. Everything scales off the smaller of the two viewport
+   * dimensions and the card is then pushed up until it fits, because on a
+   * phone in landscape there is far less height than a laptop and a card of
+   * fixed pixel height simply falls off the bottom of the screen.
+   */
+  private layout(w: number, h: number) {
+    const s = clamp(Math.min(w / 760, h / 640), 0.55, 1)
+    const cardW = Math.min(560 * s, w * 0.92)
+    const cardH = Math.min(260 * s, h * 0.88)
+    const cx = w / 2
+    const margin = 14 * s
+    // Prefer sitting low, but never past the bottom edge, and never so high
+    // that it covers the thrower.
+    const cy = Math.max(cardH / 2 + margin, Math.min(h * 0.72, h - cardH / 2 - margin))
+    return { s, cardW, cardH, cx, cy }
+  }
+
   draw(ctx: CanvasRenderingContext2D, w: number, h: number, strength: number): void {
     if (!this.active || !this.level) return
-
-    const cardW = Math.min(560, w * 0.86)
-    const cardH = 260
-    const cx = w / 2
-    const cy = h * 0.72
+    const { s, cardW, cardH, cx, cy } = this.layout(w, h)
+    const top = cy - cardH / 2
+    const bottom = cy + cardH / 2
 
     ctx.save()
-    // Card.
     ctx.globalAlpha = 0.93
     ctx.fillStyle = 'rgba(28, 22, 16, 0.82)'
-    roundRect(ctx, cx - cardW / 2, cy - cardH / 2, cardW, cardH, 18)
+    roundRect(ctx, cx - cardW / 2, top, cardW, cardH, 18 * s)
     ctx.fill()
     ctx.globalAlpha = 1
     ctx.strokeStyle = 'rgba(240, 226, 198, 0.25)'
     ctx.lineWidth = 1
     ctx.stroke()
 
-    label(ctx, this.level.name.toUpperCase(), cx, cy - cardH / 2 + 34, 15, 'rgba(238,226,200,0.6)', 'center')
-    label(ctx, this.exerciseName, cx, cy - cardH / 2 + 68, 30, PAL.paper, 'center', '600')
+    label(ctx, this.level.name.toUpperCase(), cx, top + 30 * s, 14 * s, 'rgba(238,226,200,0.6)', 'center')
+    label(ctx, this.exerciseName, cx, top + 62 * s, 29 * s, PAL.paper, 'center', '600')
 
     if (this.introTimer > 0) {
-      label(ctx, this.level.note, cx, cy - 6, 16, 'rgba(238,226,200,0.75)', 'center')
+      label(ctx, this.level.note, cx, cy + 6 * s, 15.5 * s, 'rgba(238,226,200,0.75)', 'center')
       label(
         ctx,
         'Tap on the beat when the needle is in the light.',
-        cx, cy + 26, 15, 'rgba(238,226,200,0.5)', 'center',
+        cx, cy + 34 * s, 14 * s, 'rgba(238,226,200,0.5)', 'center',
       )
       ctx.restore()
       return
     }
 
     // The bar.
-    const barW = cardW - 88
-    const barH = 26
+    const barW = cardW - 76 * s
+    const barH = 24 * s
     const bx = cx - barW / 2
-    const by = cy - 6
+    const by = cy - 4 * s
 
     ctx.fillStyle = 'rgba(0,0,0,0.35)'
     roundRect(ctx, bx, by, barW, barH, barH / 2)
@@ -171,36 +186,38 @@ export class Training {
     // Needle.
     const nx = cx + (this.needle * barW) / 2
     ctx.fillStyle = PAL.paper
-    roundRect(ctx, nx - 2.5, by - 7, 5, barH + 14, 2.5)
+    roundRect(ctx, nx - 2.5 * s, by - 6 * s, 5 * s, barH + 12 * s, 2.5 * s)
     ctx.fill()
 
     // Rep pips.
     const total = this.level.reps
+    const pipGap = Math.min(22 * s, (cardW - 40 * s) / Math.max(1, total))
     for (let i = 0; i < total; i++) {
-      const px = cx - (total - 1) * 11 + i * 22
+      const px = cx - ((total - 1) * pipGap) / 2 + i * pipGap
       ctx.beginPath()
-      ctx.arc(px, by + barH + 30, 5.5, 0, TAU)
+      ctx.arc(px, by + barH + 24 * s, 5 * s, 0, TAU)
       ctx.fillStyle = i < this.hits ? '#8fd694' : i < this.rep ? '#8a5a52' : 'rgba(240,226,198,0.22)'
       ctx.fill()
     }
 
     // Strength readout, live.
     const shown = strength + this.gained
-    label(ctx, 'ARM', cx - cardW / 2 + 34, cy + cardH / 2 - 26, 13, 'rgba(238,226,200,0.5)')
-    const mW = cardW - 150
+    const armY = bottom - 20 * s
+    label(ctx, 'ARM', cx - cardW / 2 + 28 * s, armY, 12 * s, 'rgba(238,226,200,0.5)')
+    const mW = cardW - 136 * s
     ctx.fillStyle = 'rgba(0,0,0,0.35)'
-    roundRect(ctx, cx - cardW / 2 + 76, cy + cardH / 2 - 36, mW, 10, 5)
+    roundRect(ctx, cx - cardW / 2 + 68 * s, armY - 9 * s, mW, 9 * s, 4.5 * s)
     ctx.fill()
     ctx.fillStyle = '#e6b95f'
-    roundRect(ctx, cx - cardW / 2 + 76, cy + cardH / 2 - 36, mW * clamp(shown / 22, 0.02, 1), 10, 5)
+    roundRect(ctx, cx - cardW / 2 + 68 * s, armY - 9 * s, mW * clamp(shown / 22, 0.02, 1), 9 * s, 4.5 * s)
     ctx.fill()
-    label(ctx, shown.toFixed(1), cx + cardW / 2 - 34, cy + cardH / 2 - 26, 15, PAL.paper, 'right')
+    label(ctx, shown.toFixed(1), cx + cardW / 2 - 28 * s, armY, 14 * s, PAL.paper, 'right')
 
     if (this.flash > 0) {
       ctx.globalAlpha = this.flash * 0.5
       label(
         ctx, this.flashGood ? 'clean' : 'off the beat',
-        cx, by - 22, 17, this.flashGood ? '#a8e5ac' : '#e0917f', 'center',
+        cx, by - 18 * s, 16 * s, this.flashGood ? '#a8e5ac' : '#e0917f', 'center',
       )
       ctx.globalAlpha = 1
     }
@@ -211,11 +228,13 @@ export class Training {
       label(
         ctx,
         this.hits === total ? `Perfect set.  +${this.gained.toFixed(1)} arm` : `+${this.gained.toFixed(1)} arm`,
-        cx, by - 22, 19, '#ffe6a8', 'center', '600',
+        cx, by - 18 * s, 18 * s, '#ffe6a8', 'center', '600',
       )
       if (this.readyToLeave) {
         ctx.globalAlpha = 0.55 + Math.sin(this.doneTimer * 4) * 0.2
-        label(ctx, 'press anything to throw', cx, cy + cardH / 2 + 32, 15, PAL.paper, 'center')
+        // Sits inside the card when there is no room for it underneath.
+        const hintY = bottom + 26 * s < h - 6 ? bottom + 26 * s : top + 88 * s
+        label(ctx, 'press anything to throw', cx, hintY, 14 * s, PAL.paper, 'center')
       }
       ctx.globalAlpha = 1
     }
@@ -225,7 +244,8 @@ export class Training {
 
   /** Where to draw the sparkle when a rep lands, in screen space. */
   flashPoint(w: number, h: number): { x: number; y: number } {
-    return { x: w / 2, y: h * 0.72 - 6 }
+    const { cx, cy } = this.layout(w, h)
+    return { x: cx, y: cy - 6 }
   }
 
   /** Eases the exercise animation for the thrower drawing. */

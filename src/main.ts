@@ -8,8 +8,12 @@ function resize(): void {
   // Cap the backing store at 2x. Beyond that the painterly layers cost more
   // than they show, especially on phones.
   const dpr = Math.min(2, window.devicePixelRatio || 1)
-  const w = window.innerWidth
-  const h = window.innerHeight
+  // iOS Safari reports an innerHeight that includes area hidden behind its
+  // chrome, so laying out against it pushes the bottom of the UI off screen.
+  // The visual viewport is what the player can actually see.
+  const vv = window.visualViewport
+  const w = Math.round(vv?.width ?? window.innerWidth)
+  const h = Math.round(vv?.height ?? window.innerHeight)
   canvas.width = Math.round(w * dpr)
   canvas.height = Math.round(h * dpr)
   canvas.style.width = `${w}px`
@@ -18,6 +22,11 @@ function resize(): void {
   game.resize(w, h)
 }
 window.addEventListener('resize', resize)
+window.addEventListener('orientationchange', () => setTimeout(resize, 120))
+// Safari fires these when its chrome slides in and out, which changes the
+// visible height without firing a window resize.
+window.visualViewport?.addEventListener('resize', resize)
+window.visualViewport?.addEventListener('scroll', resize)
 resize()
 
 // ------------------------------------------------------------------- input

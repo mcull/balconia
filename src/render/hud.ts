@@ -330,24 +330,28 @@ export function drawCard(
   w: number, h: number,
   title: string, lines: string[], hint: string, alpha = 1,
 ): void {
-  const cardW = Math.min(560, w * 0.86)
-  const cardH = 84 + lines.length * 30
+  // Scales with the viewport so it still fits on a phone held sideways, where
+  // there is a fraction of the height a laptop has.
+  const s = clamp(Math.min(w / 760, h / 640), 0.55, 1)
+  const cardW = Math.min(560 * s, w * 0.92)
+  const cardH = (84 + lines.length * 30) * s
   const cx = w / 2
-  const cy = h * 0.5
+  const top = h * 0.5 - cardH / 2
   ctx.save()
   ctx.globalAlpha = alpha
   ctx.fillStyle = 'rgba(28, 22, 16, 0.84)'
-  roundRect(ctx, cx - cardW / 2, cy - cardH / 2, cardW, cardH, 18)
+  roundRect(ctx, cx - cardW / 2, top, cardW, cardH, 18 * s)
   ctx.fill()
   ctx.strokeStyle = 'rgba(240, 226, 198, 0.25)'
   ctx.lineWidth = 1
   ctx.stroke()
-  label(ctx, title, cx, cy - cardH / 2 + 46, 28, PAL.paper, 'center', '600')
+  label(ctx, title, cx, top + 44 * s, 27 * s, PAL.paper, 'center', '600')
   lines.forEach((l, i) => {
-    label(ctx, l, cx, cy - cardH / 2 + 84 + i * 30, 16, 'rgba(238,226,200,0.8)', 'center')
+    label(ctx, l, cx, top + 80 * s + i * 29 * s, 15.5 * s, 'rgba(238,226,200,0.8)', 'center')
   })
   ctx.globalAlpha = alpha * (0.55 + Math.sin(performance.now() / 420) * 0.2)
-  label(ctx, hint, cx, cy + cardH / 2 + 30, 15, PAL.paper, 'center')
+  const hintY = top + cardH + 28 * s
+  label(ctx, hint, cx, hintY < h - 8 ? hintY : top + cardH - 14 * s, 14.5 * s, PAL.paper, 'center')
   ctx.restore()
 }
 
