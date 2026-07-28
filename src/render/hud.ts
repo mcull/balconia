@@ -351,18 +351,29 @@ export function drawCard(
   ctx.restore()
 }
 
+/** The game is named for the balcony, not for what you throw off it. */
+const WORDMARK = 'BALCONIA'
+const TAGLINE = 'three storeys, one pool, several opinionated squirrels'
+
 export function drawTitle(ctx: CanvasRenderingContext2D, w: number, h: number, t: number): void {
   ctx.save()
-  const cy = h * 0.34
+  const cy = h * 0.36
 
   ctx.globalAlpha = 0.9
   ctx.fillStyle = 'rgba(28, 22, 16, 0.35)'
   ctx.fillRect(0, 0, w, h)
 
-  label(ctx, 'MELON', w / 2, cy, Math.min(96, w * 0.15), PAL.paper, 'center', '700')
-  label(ctx, 'DROP', w / 2, cy + Math.min(88, w * 0.14), Math.min(96, w * 0.15), PAL.paper, 'center', '700')
+  // One word, so fit it to the viewport by measuring rather than guessing at a
+  // size that happens to look right on a laptop.
+  let size = Math.min(150, h * 0.21)
+  ctx.font = `700 ${size}px ui-serif, Georgia, 'Iowan Old Style', serif`
+  const measured = ctx.measureText(WORDMARK).width
+  const target = w * 0.74
+  if (measured > target) size *= target / measured
+
+  label(ctx, WORDMARK, w / 2, cy, size, PAL.paper, 'center', '700')
   ctx.globalAlpha = 0.72
-  label(ctx, 'three storeys, one pool, several opinionated squirrels', w / 2, cy + Math.min(130, w * 0.2), 16, PAL.paper, 'center')
+  label(ctx, TAGLINE, w / 2, cy + size * 0.5, Math.max(13, size * 0.16), PAL.paper, 'center')
 
   const y = h * 0.74
   ctx.globalAlpha = 0.8
