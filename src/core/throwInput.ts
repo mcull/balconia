@@ -134,8 +134,6 @@ export class ThrowController {
       return
     }
 
-    this.held += dt
-
     if (!this.keyboard) {
       const { dx, dy, len } = this.pull
       this.committed = len >= THROW.minPull
@@ -163,6 +161,12 @@ export class ThrowController {
       this.angle = this.keyAngle
     }
 
+    // The wind-up only runs once you have actually pulled back. Resting a
+    // finger on the button while you read the screen is not a loaded throw,
+    // and it must never cost you a melon — there is no charge ring on screen
+    // yet to warn you.
+    if (this.committed) this.held += dt
+
     if (this.held >= THROW.chargeTime * THROW.fumbleAt) this.fumbled = true
   }
 
@@ -173,18 +177,24 @@ export class ThrowController {
       this.committed && !this.fumbled
         ? { angle: this.aimAngle, power: this.power, spin: this.spin }
         : null
-    this.active = false
-    this.committed = false
-    this.held = 0
-    this.samples.length = 0
-    this.curl = 0
+    this.reset()
     if (this.keyboard) this.keySpin = 0
     return result
   }
 
   cancel(): void {
+    this.reset()
+  }
+
+  /**
+   * Clears the gesture completely. `fumbled` in particular has to be cleared
+   * here: the game checks it every frame while aiming, so leaving it set makes
+   * every remaining melon drop on the spot with no input at all.
+   */
+  private reset(): void {
     this.active = false
     this.committed = false
+    this.fumbled = false
     this.held = 0
     this.samples.length = 0
     this.curl = 0

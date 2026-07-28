@@ -103,8 +103,12 @@ export const THROW = {
   /** Wrist flick -> spin, in melon rad/s per rad/s of drag-vector rotation. */
   spinGain: 7.5,
   maxSpin: 46,
-  /** Hold past this multiple of chargeTime and you fumble the melon entirely. */
-  fumbleAt: 1.85,
+  /**
+   * Hold past this multiple of chargeTime and you fumble the melon entirely.
+   * Power is already full at 1.0, so this is a full second and a half of dead
+   * time past any reason to keep holding, and the ring warns throughout it.
+   */
+  fumbleAt: 2.3,
   /** Minimum drag, in screen pixels, before a throw counts as aimed. */
   minPull: 26,
 }

@@ -251,10 +251,23 @@ export function drawAim(ctx: CanvasRenderingContext2D, cam: Camera, a: AimInfo):
   ctx.lineTo(hx + Math.cos(tickA) * (R + 9), hy + Math.sin(tickA) * (R + 9))
   ctx.stroke()
 
-  // About to drop it.
-  if (danger > 0.82) {
-    ctx.globalAlpha = 0.4 + Math.sin(performance.now() / 55) * 0.35
-    label(ctx, 'LET GO', hx, hy - R - 16, 15, '#c2402d', 'center', '700')
+  // Warn from the moment power is full, not at the last instant. Past here
+  // holding buys nothing and risks the melon, so the ring says so the whole
+  // way rather than surprising you with a drop.
+  if (a.power >= 1) {
+    const urgency = remap(danger, 1 / THROW.fumbleAt, 1, 0, 1)
+    ctx.globalAlpha = 0.55 + Math.sin(performance.now() / (140 - urgency * 95)) * 0.4
+    ctx.strokeStyle = urgency > 0.5 ? '#c2402d' : '#d68a3c'
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.arc(hx, hy, R + 9 + urgency * 5, -Math.PI * 0.62, Math.PI * 0.62)
+    ctx.stroke()
+    label(
+      ctx,
+      urgency > 0.5 ? 'LET GO' : 'full power',
+      hx, hy - R - 20, urgency > 0.5 ? 16 : 13,
+      urgency > 0.5 ? '#e8624a' : '#f0c07a', 'center', '700',
+    )
     ctx.globalAlpha = 1
   }
   ctx.restore()
