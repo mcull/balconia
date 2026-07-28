@@ -1,5 +1,5 @@
 import { THROW } from './config'
-import { approach, clamp, noise1, remap, TAU } from '../util/math'
+import { approach, clamp, lerp, noise1, remap, TAU } from '../util/math'
 
 export interface ThrowResult {
   /** Direction the melon leaves, in world radians (0 = downhill, +y up). */
@@ -154,8 +154,14 @@ export class ThrowController {
         const span = now - first.t
         this.curl = span > 1e-3 ? (this.rawAngle - first.a) / span : 0
 
-        // Aim lags the pull, so the last-instant flick is spin, not a miss.
-        this.angle = approach(this.angle, this.rawAngle, 13, dt)
+        // Aim tracks the pull, but how closely depends on how fast the pull is
+        // rotating. Move deliberately and the line follows you one to one;
+        // whip the pointer round and the line barely moves, so the flick
+        // registers as spin instead of wrecking the shot you had lined up.
+        // Without this the two axes fight: a decent flick dragged the aim
+        // eighteen degrees, which is more than the whole target is wide.
+        const rate = lerp(14, 0.55, clamp(Math.abs(this.curl) / 4, 0, 1))
+        this.angle = approach(this.angle, this.rawAngle, rate, dt)
       }
     } else {
       this.angle = this.keyAngle
